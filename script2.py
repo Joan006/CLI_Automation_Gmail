@@ -4,6 +4,8 @@ import yaml
 import re
 import pandas as pd
 from openpyxl import load_workbook
+import pywhatkit as kit
+from datetime import datetime
 
 # Abrir el archivo donde se encuentran las credenciales
 with open("CREDENTIALS.yml") as f:
@@ -56,8 +58,8 @@ for msg in msgs[::-1]:
             my_msg = email.message_from_bytes((response_part[1]))
             
             # Agregar información al DataFrame
-            data['Subject'].append(my_msg['subject'])
-            data['From'].append(my_msg['from'])
+            data['Subject'].append(" 🔎 : " + my_msg['subject'])
+            data['From'].append(" 📭 : " + my_msg['from'])
             
 
             body = ''
@@ -87,7 +89,37 @@ df_existing = pd.read_excel(excel_path, sheet_name=sheet_name)
 # Concatenar el nuevo DataFrame con el existente
 df_combined = pd.concat([df_existing, df], ignore_index=True)
 
-# Escribir el DataFrame combinado en el archivo Excel existente
-df_combined.to_excel(excel_path, sheet_name=sheet_name, index=False)
+# Agregar nueva columna
+nueva_columna_nombre = 'NuevaColumna'
+nuevo_valor = f"📩 NUEVO 📩"
+df_combined[nueva_columna_nombre] = nuevo_valor
 
+# Obtener la última fila del DataFrame combinado
+ultima_fila = df_combined.iloc[-1]
+
+# Personalizar el mensaje de WhatsApp
+asunto = ultima_fila['Subject']
+remite = ultima_fila['From']
+cuerpo = ultima_fila['Body']
+
+# Construir el mensaje de WhatsApp con emojis y formato estético
+mensaje_whatsapp = (
+    f"📩 *Nuevo Correo Electrónico* 📩 \n"
+    f"Asunto: {asunto}\n"
+    f"Remitente: {remite}\n"
+    f"Cuerpo del Correo: {cuerpo}"
+)
+
+# Enviar mensaje por WhatsApp para la última fila
+columnas_seleccionadas = ultima_fila[[ nueva_columna_nombre, 'Subject', 'From', 'Body',]]
+mensaje_whatsapp = columnas_seleccionadas.to_string(index=False)
+hora_actual = datetime.now().time()
+mensaje_whatsapp = mensaje_whatsapp.encode('utf-8').decode('utf-8')
+
+partes_mensaje = [mensaje_whatsapp[i:i+1500] for i in range(0, len(mensaje_whatsapp), 1500)]
+
+# Enviar cada parte por separado
+for parte in partes_mensaje:
+    kit.sendwhatmsg_instantly("+525613801305", parte)# Escribir el DataFrame combinado en el archivo Excel existente
+df_combined.to_excel(excel_path, sheet_name=sheet_name, index=False)
 
