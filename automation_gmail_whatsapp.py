@@ -118,7 +118,6 @@ columnas_seleccionadas = ultima_fila[[ nueva_columna_nombre, 'Subject', 'From', 
 mensaje_whatsapp = columnas_seleccionadas.to_string(index=False)
 hora_actual = datetime.now().time()
 mensaje_whatsapp = mensaje_whatsapp.encode('utf-8').decode('utf-8')
-
 partes_mensaje = [mensaje_whatsapp[i:i+1500] for i in range(0, len(mensaje_whatsapp), 1500)]
 
 
